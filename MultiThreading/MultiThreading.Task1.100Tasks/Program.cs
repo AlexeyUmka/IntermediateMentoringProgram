@@ -39,7 +39,7 @@ namespace MultiThreading.Task1._100Tasks
             
             tasks.ForEach(t => t.Start());
                 
-            Task.WhenAll(tasks);
+            Task.WhenAll(tasks).GetAwaiter().GetResult();
         }
 
         static void Output(int taskNumber, int iterationNumber)
