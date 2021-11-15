@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MultiThreading.Task3.MatrixMultiplier.Matrices;
 using MultiThreading.Task3.MatrixMultiplier.Multipliers;
@@ -20,9 +21,37 @@ namespace MultiThreading.Task3.MatrixMultiplier.Tests
         {
             // todo: implement a test method to check the size of the matrix which makes parallel multiplication more effective than
             // todo: the regular one
+            Tuple<IMatrix, long> regularResult = null;
+            Tuple<IMatrix, long> parallelResult = null;
+            int effectiveSize = 0;
+            for (var sizeOfMatrix = 1; sizeOfMatrix < int.MaxValue; sizeOfMatrix++)
+            {
+                var firstMatrix = new Matrix(sizeOfMatrix, sizeOfMatrix, true);
+                var secondMatrix = new Matrix(sizeOfMatrix, sizeOfMatrix, true);
+                regularResult = MultiplyMatricesGetResultAndTimeElapsed(firstMatrix, secondMatrix, new MatricesMultiplier());
+                parallelResult = MultiplyMatricesGetResultAndTimeElapsed(firstMatrix, secondMatrix, new MatricesMultiplierParallel());
+                if(regularResult.Item2 > parallelResult.Item2)
+                {
+                    effectiveSize = sizeOfMatrix;
+                    break;
+                }
+            }
+            Assert.IsNotNull(regularResult);
+            Assert.IsNotNull(parallelResult);
+            Assert.IsTrue(regularResult.Item2 > parallelResult.Item2);
+            Debug.WriteLine($"Parallel multiplication more effective for matrix size - {effectiveSize}");
         }
 
         #region private methods
+
+        Tuple<IMatrix, long> MultiplyMatricesGetResultAndTimeElapsed(IMatrix m1, IMatrix m2, IMatricesMultiplier matricesMultiplier)
+        {
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            var reqularResult = matricesMultiplier.Multiply(m1, m2);
+            stopWatch.Stop();
+            return new Tuple<IMatrix, long>(reqularResult, stopWatch.ElapsedMilliseconds);
+        }
 
         void TestMatrix3On3(IMatricesMultiplier matrixMultiplier)
         {
