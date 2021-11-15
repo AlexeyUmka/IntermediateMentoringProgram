@@ -29,7 +29,17 @@ namespace MultiThreading.Task1._100Tasks
 
         static void HundredTasks()
         {
-            // add you code here
+            var tasks = Enumerable.Range(1, TaskAmount).ToList().Select((taskNumber) => new Task(() =>
+            {
+                Enumerable.Range(1, MaxIterationsCount).ToList().ForEach((iterationNumber) =>
+                {
+                    Output(taskNumber, iterationNumber); 
+                });
+            })).ToList();
+            
+            tasks.ForEach(t => t.Start());
+                
+            Task.WhenAll(tasks).GetAwaiter().GetResult();
         }
 
         static void Output(int taskNumber, int iterationNumber)
