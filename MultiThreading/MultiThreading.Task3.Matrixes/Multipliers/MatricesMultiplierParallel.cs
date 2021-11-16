@@ -7,7 +7,7 @@ namespace MultiThreading.Task3.MatrixMultiplier.Multipliers
     {
         public IMatrix Multiply(IMatrix m1, IMatrix m2)
         {
-            var resultMatrix = new Matrix(m1.RowCount, m2.ColCount, true);
+            var resultMatrix = new Matrix(m1.RowCount, m2.ColCount);
             Parallel.For(0, m1.RowCount, i =>
             {
                 for (byte j = 0; j < m2.ColCount; j++)
