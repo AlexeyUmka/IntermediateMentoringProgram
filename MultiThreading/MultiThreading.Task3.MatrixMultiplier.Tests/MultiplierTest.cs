@@ -36,8 +36,8 @@ namespace MultiThreading.Task3.MatrixMultiplier.Tests
                     break;
                 }
             }
-            Assert.IsNotNull(regularResult);
-            Assert.IsNotNull(parallelResult);
+            Assert.IsNotNull(regularResult?.Item1);
+            Assert.IsNotNull(parallelResult?.Item1);
             Assert.IsTrue(regularResult.Item2 > parallelResult.Item2);
             Debug.WriteLine($"Parallel multiplication more effective for matrix size - {effectiveSize}");
         }
