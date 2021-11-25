@@ -7,57 +7,81 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MultiThreading.Task5.Threads.SharedCollection
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Console.WriteLine("5. Write a program which creates two threads and a shared collection:");
             Console.WriteLine("the first one should add 10 elements into the collection and the second should print all elements in the collection after each adding.");
             Console.WriteLine("Use Thread, ThreadPool or Task classes for thread creation and any kind of synchronization constructions.");
             Console.WriteLine();
 
-            var synchronizedReadWrite = new SynchronizedReadWrite();
-            synchronizedReadWrite.ElementAdded += () =>
+            var myBlockingCollection = new MyBlockingCollection<int>();
+            var elementsAmount = 100;
+            
+            var updateTask = Task.Run(() =>
             {
-                return Task.Run(() =>
+                Enumerable.Range(1, elementsAmount).ToList().ForEach(i =>
                 {
-                    Console.WriteLine("Element was added!");
-                    Console.WriteLine(synchronizedReadWrite.Read(Enumerable.Range(1, synchronizedReadWrite.Count)));
+                    myBlockingCollection.WaitForDisplay();
+                    myBlockingCollection.AddItem(i);
                 });
-            };
-            Task.Run(() =>
+            });
+            
+            var displayTask = Task.Run(() =>
             {
-                Enumerable.Range(1, 10).ToList().ForEach(key =>
+                Enumerable.Range(1, elementsAmount).ToList().ForEach(i =>
                 {
-                    synchronizedReadWrite.Add(key, (key * 3).ToString()).GetAwaiter().GetResult();
+                    myBlockingCollection.WaitForUpdate();
+                    myBlockingCollection.Display();
                 });
             });
 
+            await Task.WhenAll(updateTask, displayTask);
+            
             Console.ReadLine();
         }
     }
-    
-    public class SynchronizedReadWrite
+
+    public class MyBlockingCollection<T>
     {
-        public event Func<Task> ElementAdded;
-        
-        private readonly Dictionary<int, string> _dictionary = new();
-
-        public int Count => _dictionary.Count;
-
-        public string Read(IEnumerable<int> keys)
+        private readonly List<T> _items;
+        private readonly ManualResetEvent _displayOperation;
+        private readonly ManualResetEvent _updateOperation;
+        public MyBlockingCollection()
         {
-            return string.Join(", ", keys.Select(k => _dictionary[k]));
+            _items = new List<T>();
+            _displayOperation = new(false);
+            _updateOperation = new(true);
         }
 
-        public Task Add(int key, string value)
+        public void WaitForDisplay()
         {
-            _dictionary.Add(key, value);
-            return ElementAdded?.Invoke();
+            _displayOperation.WaitOne();
+        }
+
+        public void WaitForUpdate()
+        {
+            _updateOperation.WaitOne();
+        }
+
+        public void Display()
+        {
+            _updateOperation.Reset();
+            Console.WriteLine(string.Join(", ", _items));
+            _displayOperation.Set();
+        }
+
+        public void AddItem(T item)
+        {
+            _displayOperation.Reset();
+            _items.Add(item);
+            _updateOperation.Set();
         }
     }
 }
