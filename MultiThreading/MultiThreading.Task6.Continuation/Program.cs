@@ -28,7 +28,7 @@ namespace MultiThreading.Task6.Continuation
             await DemonstrateA();
             await DemonstrateB();
             await DemonstrateC();
-            // await DemonstrateD();
+            await DemonstrateD();
 
             Console.ReadLine();
         }
@@ -92,28 +92,15 @@ namespace MultiThreading.Task6.Continuation
             {
                 Thread.Sleep(3000);
             }, cancelTokenSource.Token);
-            return parentTask.ContinueWith(x =>
-            {
-                Console.WriteLine("Child continues only if parent is canceled");
-            }, TaskContinuationOptions.OnlyOnCanceled);
-        }
-    }
-
-    class MyTaskScheduler : TaskScheduler
-    {
-        protected override IEnumerable<Task>? GetScheduledTasks()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void QueueTask(Task task)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
-        {
-            throw new NotImplementedException();
+            return parentTask
+                .ContinueWith(x =>
+                {
+                    Console.WriteLine("Child continues only if parent is canceled");
+                }, TaskContinuationOptions.OnlyOnCanceled)
+                .ContinueWith(x =>
+                {
+                    Console.Write("And runs log running task");
+                }, TaskContinuationOptions.LongRunning);
         }
     }
 }
